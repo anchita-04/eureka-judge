@@ -7,7 +7,8 @@ venv/
 .venv/
 env/
 
+# Environment variables
 .env
 
-# macOS system files
+# macOS
 .DS_Store
