@@ -1,0 +1,30 @@
+#include <bits/stdc++.h>
+using namespace std;
+ 
+int main() {
+        int n,k;
+        cin >> n >> k;
+        string binary;
+        cin >> binary;
+        vector<string> farms;
+            for(size_t i=0;i<binary.length();i+=k){
+            farms.push_back(binary.substr(i,k));
+        }
+        int count=0;
+        for (const auto& field : farms) {
+            
+            bool hasZero = false;
+            for (char c:field){
+                if (c == '0') {
+                    hasZero = true;
+                    break;
+                }
+            }
+            if(!hasZero){
+                    count++;
+                }
+        }
+        cout << count << "\n";
+ 
+    return 0;
+}
