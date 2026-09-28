@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: eureka
+      POSTGRES_PASSWORD: eureka-dev-only
+      POSTGRES_DB: eureka
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - eureka-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eureka -d eureka"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://eureka:eureka-dev-only@db:5432/eureka?schema=public
+      PORT: 3000
+      JUDGE_EVENT_SECRET: local-judge-secret-change-before-deploy
+      WEB_ORIGIN: http://localhost:3001
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../apps/api/src:/workspace/apps/api/src
+      - ../apps/api/prisma:/workspace/apps/api/prisma
+    command: ["sh", "-c", "pnpm --filter @eureka/api exec prisma db push && pnpm api:dev"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  eureka-postgres:

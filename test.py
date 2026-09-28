@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 from judge import run_judge
 
@@ -14,5 +15,8 @@ result = run_judge(
     language=language,
     input_data=input_data,
     expected_output=expected_output,
+    submission_id=os.getenv("EUREKA_SUBMISSION_ID") or None,
 )
 print(result)
+if result.get("callback", {}).get("reported") is False:
+    raise SystemExit(1)

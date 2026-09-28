@@ -12,3 +12,8 @@ env/
 
 # macOS
 .DS_Store
+# Node / TypeScript API
+node_modules/
+dist/
+.env.*
+!.env.example

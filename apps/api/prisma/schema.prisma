@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String                @id @default(uuid()) @db.Uuid
+  username           String                @unique
+  name               String?
+  avatarUrl          String?
+  participations     ContestParticipant[]
+  submissions        Submission[]
+  leaderboardEntries LeaderboardEntry[]
+}
+
+model Contest {
+  id                     String                     @id @default(uuid()) @db.Uuid
+  name                   String
+  startTime              DateTime                   @db.Timestamptz(6)
+  endTime                DateTime                   @db.Timestamptz(6)
+  freezeTime             DateTime?                  @db.Timestamptz(6)
+  status                 String                     @default("draft")
+  visibility             String                     @default("public")
+  penaltyMinutesPerWrong Int                        @default(20)
+  problems               ContestProblem[]
+  participants           ContestParticipant[]
+  submissions            Submission[]
+  leaderboardEntries     LeaderboardEntry[]
+  freezeSnapshot         LeaderboardFreezeSnapshot?
+}
+
+model Problem {
+  id          String           @id @default(uuid()) @db.Uuid
+  title       String
+  contests    ContestProblem[]
+  submissions Submission[]
+}
+
+model ContestProblem {
+  contestId String  @db.Uuid
+  problemId String  @db.Uuid
+  label     String
+  ordinal   Int     @default(0)
+  contest   Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@id([contestId, problemId])
+  @@unique([contestId, label])
+  @@index([contestId, ordinal])
+}
+
+model ContestParticipant {
+  contestId    String   @db.Uuid
+  userId       String   @db.Uuid
+  registeredAt DateTime @default(now()) @db.Timestamptz(6)
+  contest      Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([contestId, userId])
+  @@index([userId, registeredAt])
+}
+
+model Submission {
+  id          String    @id @default(uuid()) @db.Uuid
+  contestId   String?   @db.Uuid
+  userId      String    @db.Uuid
+  problemId   String    @db.Uuid
+  status      String
+  verdict     String?
+  runtimeMs   Int?
+  memoryKb    Int?
+  submittedAt DateTime  @default(now()) @db.Timestamptz(6)
+  judgedAt    DateTime? @db.Timestamptz(6)
+  contest     Contest?  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem     Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([contestId, submittedAt, userId, problemId])
+  @@index([contestId, status, judgedAt])
+}
+
+model LeaderboardEntry {
+  contestId           String   @db.Uuid
+  userId              String   @db.Uuid
+  problemsSolved      Int      @default(0)
+  totalPenaltyMinutes Int      @default(0)
+  rank                Int      @default(0)
+  lastUpdated         DateTime @default(now()) @db.Timestamptz(6)
+  contest             Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([contestId, userId])
+  @@index([contestId, problemsSolved(sort: Desc), totalPenaltyMinutes])
+}
+
+model LeaderboardFreezeSnapshot {
+  contestId  String   @id @db.Uuid
+  capturedAt DateTime @default(now()) @db.Timestamptz(6)
+  entries    Json
+  contest    Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+}

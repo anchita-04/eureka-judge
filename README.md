@@ -1,12 +1,13 @@
 # eureka-judge
-eureka.
-Code compiles (if needed — skipped for Python) and runs inside a Docker container, not on our actual server
-Container has limits on it: time limit, memory limit, no internet access, no fork-bombing
-Whatever it prints gets compared to the expected output → verdict comes back 
 
-Rn this is for single submission, single test case, C++/Python/Java all work - 
-   --- these 4 given in workspace :
-> users : code + language
-> problem setter's : input and expected output
+This repository contains a basic Python judge prototype and a demo-ready NestJS leaderboard API for the Eureka competitive programming platform.
 
-Verdicts supported: AC WA CE RE TLE MLE
+## Judge prototype
+
+The judge compiles and runs a submission in Docker with resource limits and no network access, then compares its output with the expected output. The current prototype handles one submission and one testcase at a time. Supported languages are C++, Python, and Java.
+
+## Leaderboard API
+
+The API lives in [`apps/api`](apps/api/README.md). It exposes `GET /api/contests/:contestId/leaderboard`, computes ICPC-style standings from completed contest submissions, persists a freeze snapshot, accepts a protected judge verdict callback, and emits WebSocket refresh events. The Python judge can report its verdict to the callback for an existing submission ID. Developers can run the API with Docker Compose without installing Node.js on the host computer. Run `scripts/demo-leaderboard.ps1` to run the judge and demonstrate the leaderboard changing from its actual verdict.
+
+The demo API requires PostgreSQL and its Prisma schema. It is a small demonstration slice, not the full production platform; see the API README for setup and scope.
